@@ -6,6 +6,7 @@
         'src/odbc.cpp',
         'src/odbc_connection.cpp',
         'src/odbc_statement.cpp',
+        'src/odbc_cursor.cpp',
         'src/dynodbc.cpp'
       ],
       'cflags' : ['-Wall', '-Wextra', '-Wno-unused-parameter', '-DNAPI_DISABLE_CPP_EXCEPTIONS'],
@@ -13,7 +14,8 @@
         '<!@(node -p "require(\'node-addon-api\').include")'
       ],
       'defines' : [
-        'NAPI_EXPERIMENTAL'
+        'NAPI_EXPERIMENTAL',
+        'NAPI_VERSION=<(napi_build_version)'
       ],
       'conditions' : [
         [ 'OS == "linux"', {
@@ -25,6 +27,28 @@
           ]
         }],
         [ 'OS == "mac"', {
+          'conditions': [
+            [ 'target_arch=="arm64"', {
+              'include_dirs': [
+                '/opt/homebrew/include'
+              ],  
+              'libraries' : [
+                '-L/opt/homebrew/lib',
+                '-lodbc'
+              ],  
+            }], ['target_arch=="x64"', {
+              'include_dirs': [
+                '/usr/local/include',
+              ],  
+              'libraries' : [
+                '-L/usr/local/lib',
+                '-lodbc'
+              ],
+            }],
+          ],
+          'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS', 'NAPI_EXPERIMENTAL' ]
+        }],
+        [ 'OS == "freebsd"', {
           'include_dirs': [
             '/usr/local/include'
           ],
@@ -56,6 +80,10 @@
                 'cflags' : ['-std=c++0x', '-DNAPI_DISABLE_CPP_EXCEPTIONS', '-Wall', '-Wextra', '-Wno-unused-parameter', '-I/QOpenSys/usr/include', '-I/QOpenSys/pkgs/include']
              }]
           ]
+        }],
+        [ 'OS=="os400"', {
+          'ldflags': ['-Wl,-blibpath:/QOpenSys/pkgs/lib', '-lodbc'],
+          'cflags' : ['-std=c++0x', '-DNAPI_DISABLE_CPP_EXCEPTIONS', '-Wall', '-Wextra', '-Wno-unused-parameter', '-I/QOpenSys/usr/include', '-I/QOpenSys/pkgs/include']
         }]
       ]
     },
